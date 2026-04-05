@@ -1,0 +1,85 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: jaringan
+      POSTGRES_PASSWORD: jaringan_dev
+      POSTGRES_DB: jaringan_dagang
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/deploy/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jaringan"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Beckn Registry (Phase 0)
+  registry:
+    build:
+      context: ./infra/registry
+      dockerfile: Dockerfile
+    ports:
+      - "3030:3030"
+    environment:
+      - DATABASE_URL=postgresql://jaringan:jaringan_dev@postgres:5432/beckn_registry
+      - REDIS_URL=redis://redis:6379/1
+      - PORT=3030
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Beckn Gateway (Phase 0)
+  gateway:
+    build:
+      context: ./infra/gateway
+      dockerfile: Dockerfile
+    ports:
+      - "4030:4030"
+    environment:
+      - REGISTRY_URL=http://registry:3030
+      - REDIS_URL=redis://redis:6379/2
+      - PORT=4030
+    depends_on:
+      - registry
+
+  # BPP Service (Phase 1) - Seller-side Beckn provider platform
+  bpp-service:
+    build:
+      context: ./apps/bpp-service
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://jaringan:jaringan_dev@postgres:5432/jaringan_dagang
+      - REDIS_URL=redis://redis:6379/3
+      - REGISTRY_URL=http://registry:3030
+      - GATEWAY_URL=http://gateway:4030
+      - BPP_SUBSCRIBER_ID=bpp.jaringan-dagang.local
+      - BPP_SUBSCRIBER_URL=http://bpp-service:8001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      registry:
+        condition: service_started
+
+volumes:
+  pgdata:
