@@ -4,15 +4,28 @@ const REGISTRY_URL = "/api/registry";
 const BAP_URL = "/api/bap";
 
 export async function fetchSubscribers(): Promise<Subscriber[]> {
-  try {
-    const res = await fetch(`${REGISTRY_URL}/subscribers`, {
-      cache: "no-store",
-    });
-    if (!res.ok) throw new Error(`Registry responded ${res.status}`);
-    return res.json();
-  } catch {
-    return getMockSubscribers();
-  }
+  const res = await fetch(`${REGISTRY_URL}/subscribers`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Registry responded ${res.status}`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const raw: any[] = await res.json();
+  // Map API field names to our Subscriber type
+  return raw.map((r) => ({
+    subscriber_id: r.subscriber_id,
+    subscriber_url: r.subscriber_url,
+    type: r.type,
+    domain: r.domain,
+    city: r.city,
+    country: r.country || "IDN",
+    signing_public_key: r.signing_public_key,
+    encr_public_key: r.encryption_public_key || r.encr_public_key || "",
+    status: r.status,
+    created: r.created_at || r.created,
+    updated: r.updated_at || r.updated,
+    valid_from: r.valid_from,
+    valid_until: r.valid_until,
+  }));
 }
 
 export async function fetchHealth(
@@ -111,97 +124,3 @@ export function computeStats(subscribers: Subscriber[]): NetworkStats {
   };
 }
 
-function getMockSubscribers(): Subscriber[] {
-  return [
-    {
-      subscriber_id: "toko-online.example.com",
-      subscriber_url: "http://localhost:8002",
-      type: "BAP",
-      domain: "retail",
-      city: "std:062",
-      country: "IDN",
-      signing_public_key: "MCowBQYDK2VwAyEA...",
-      encr_public_key: "MCowBQYDK2VuAyEA...",
-      status: "SUBSCRIBED",
-      created: "2026-03-01T10:00:00Z",
-      updated: "2026-03-01T10:00:00Z",
-      valid_from: "2026-03-01T10:00:00Z",
-      valid_until: "2027-03-01T10:00:00Z",
-    },
-    {
-      subscriber_id: "warung-pintar.example.com",
-      subscriber_url: "http://localhost:8001",
-      type: "BPP",
-      domain: "retail",
-      city: "std:062",
-      country: "IDN",
-      signing_public_key: "MCowBQYDK2VwAyEA...",
-      encr_public_key: "MCowBQYDK2VuAyEA...",
-      status: "SUBSCRIBED",
-      created: "2026-03-01T10:00:00Z",
-      updated: "2026-03-01T10:00:00Z",
-      valid_from: "2026-03-01T10:00:00Z",
-      valid_until: "2027-03-01T10:00:00Z",
-    },
-    {
-      subscriber_id: "grabmart-id.example.com",
-      subscriber_url: "http://grabmart.local:8001",
-      type: "BPP",
-      domain: "food-beverage",
-      city: "std:021",
-      country: "IDN",
-      signing_public_key: "MCowBQYDK2VwAyEA...",
-      encr_public_key: "MCowBQYDK2VuAyEA...",
-      status: "SUBSCRIBED",
-      created: "2026-03-15T08:30:00Z",
-      updated: "2026-03-15T08:30:00Z",
-      valid_from: "2026-03-15T08:30:00Z",
-      valid_until: "2027-03-15T08:30:00Z",
-    },
-    {
-      subscriber_id: "tokopedia-bap.example.com",
-      subscriber_url: "http://tokopedia-bap.local:8002",
-      type: "BAP",
-      domain: "retail",
-      city: "std:021",
-      country: "IDN",
-      signing_public_key: "MCowBQYDK2VwAyEA...",
-      encr_public_key: "MCowBQYDK2VuAyEA...",
-      status: "SUBSCRIBED",
-      created: "2026-03-20T14:00:00Z",
-      updated: "2026-03-20T14:00:00Z",
-      valid_from: "2026-03-20T14:00:00Z",
-      valid_until: "2027-03-20T14:00:00Z",
-    },
-    {
-      subscriber_id: "jne-logistics.example.com",
-      subscriber_url: "http://jne.local:8003",
-      type: "BPP",
-      domain: "logistics",
-      city: "std:021",
-      country: "IDN",
-      signing_public_key: "MCowBQYDK2VwAyEA...",
-      encr_public_key: "MCowBQYDK2VuAyEA...",
-      status: "SUBSCRIBED",
-      created: "2026-04-01T09:00:00Z",
-      updated: "2026-04-01T09:00:00Z",
-      valid_from: "2026-04-01T09:00:00Z",
-      valid_until: "2027-04-01T09:00:00Z",
-    },
-    {
-      subscriber_id: "new-merchant.example.com",
-      subscriber_url: "http://new-merchant.local:8005",
-      type: "BPP",
-      domain: "retail",
-      city: "std:031",
-      country: "IDN",
-      signing_public_key: "MCowBQYDK2VwAyEA...",
-      encr_public_key: "MCowBQYDK2VuAyEA...",
-      status: "INITIATED",
-      created: "2026-04-04T16:00:00Z",
-      updated: "2026-04-04T16:00:00Z",
-      valid_from: "2026-04-04T16:00:00Z",
-      valid_until: "2027-04-04T16:00:00Z",
-    },
-  ];
-}

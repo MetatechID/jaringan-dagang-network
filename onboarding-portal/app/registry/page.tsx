@@ -38,6 +38,7 @@ function TypeBadge({ type }: { type: string }) {
 export default function RegistryExplorer() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterDomain, setFilterDomain] = useState<string>("all");
@@ -46,9 +47,15 @@ export default function RegistryExplorer() {
 
   useEffect(() => {
     async function load() {
-      const data = await fetchSubscribers();
-      setSubscribers(data);
-      setLoading(false);
+      try {
+        const data = await fetchSubscribers();
+        setSubscribers(data);
+        setError(null);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to fetch subscribers");
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
@@ -77,6 +84,23 @@ export default function RegistryExplorer() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-10 h-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (error && subscribers.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <p className="text-sm text-red-400 mb-2">Failed to connect to registry</p>
+          <p className="text-xs text-slate-500 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 rounded-lg border border-cyan-900/30 text-sm text-cyan-400 hover:bg-cyan-400/5 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }

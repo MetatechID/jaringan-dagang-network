@@ -7,6 +7,17 @@ interface Props {
   subscribers: Subscriber[];
 }
 
+/** Extract a display-friendly name from a subscriber_id like "matchamu.jaringan-dagang.id" */
+function displayName(subscriberId: string): string {
+  // Take the first segment before the first dot
+  const first = subscriberId.split(".")[0];
+  // Convert kebab-case to Title Case
+  return first
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 function NodeCard({
   label,
   type,
@@ -145,7 +156,10 @@ export function NetworkTopology({ subscribers }: Props) {
   const bpps = subscribers.filter((s) => s.type === "BPP");
 
   const width = 900;
-  const height = 520;
+  // Dynamically size height based on number of nodes
+  const maxNodes = Math.max(baps.length, bpps.length, 1);
+  const nodeSpacing = 100;
+  const height = Math.max(420, maxNodes * nodeSpacing + 200);
   const centerX = width / 2;
   const centerY = height / 2;
 
@@ -153,13 +167,14 @@ export function NetworkTopology({ subscribers }: Props) {
   const registryPos = { x: centerX, y: centerY - 60 };
   const gatewayPos = { x: centerX, y: centerY + 60 };
 
-  const bapStartY = 100;
-  const bapSpacing = 90;
-  const bapX = 110;
+  // Center BAP/BPP nodes vertically around the center
+  const bapTotalHeight = (baps.length - 1) * nodeSpacing;
+  const bapStartY = centerY - bapTotalHeight / 2;
+  const bapX = 130;
 
-  const bppStartY = 100;
-  const bppSpacing = 90;
-  const bppX = width - 110;
+  const bppTotalHeight = (bpps.length - 1) * nodeSpacing;
+  const bppStartY = centerY - bppTotalHeight / 2;
+  const bppX = width - 130;
 
   return (
     <div className="relative w-full overflow-hidden rounded-xl border border-cyan-900/30 bg-surface-800/50">
@@ -174,7 +189,7 @@ export function NetworkTopology({ subscribers }: Props) {
       <svg
         viewBox={`0 0 ${width} ${height}`}
         className="w-full h-auto"
-        style={{ maxHeight: "520px" }}
+        style={{ maxHeight: `${height}px` }}
       >
         <defs>
           {/* Glow filter */}
@@ -256,7 +271,7 @@ export function NetworkTopology({ subscribers }: Props) {
 
         {/* Connections: BAPs to Gateway */}
         {baps.map((_, i) => {
-          const bapY = bapStartY + i * bapSpacing;
+          const bapY = bapStartY + i * nodeSpacing;
           return (
             <g key={`bap-conn-${i}`}>
               <path
@@ -288,7 +303,7 @@ export function NetworkTopology({ subscribers }: Props) {
 
         {/* Connections: Gateway to BPPs */}
         {bpps.map((_, i) => {
-          const bppY = bppStartY + i * bppSpacing;
+          const bppY = bppStartY + i * nodeSpacing;
           return (
             <g key={`bpp-conn-${i}`}>
               <path
@@ -360,13 +375,13 @@ export function NetworkTopology({ subscribers }: Props) {
         {baps.map((bap, i) => (
           <NodeCard
             key={bap.subscriber_id}
-            label={bap.subscriber_id.split(".")[0]}
+            label={displayName(bap.subscriber_id)}
             type="BAP"
             status={bap.status}
             domain={bap.domain}
             city={bap.city}
             x={bapX}
-            y={bapStartY + i * bapSpacing}
+            y={bapStartY + i * nodeSpacing}
             color="#22d3ee"
           />
         ))}
@@ -375,13 +390,13 @@ export function NetworkTopology({ subscribers }: Props) {
         {bpps.map((bpp, i) => (
           <NodeCard
             key={bpp.subscriber_id}
-            label={bpp.subscriber_id.split(".")[0]}
+            label={displayName(bpp.subscriber_id)}
             type="BPP"
             status={bpp.status}
             domain={bpp.domain}
             city={bpp.city}
             x={bppX}
-            y={bppStartY + i * bppSpacing}
+            y={bppStartY + i * nodeSpacing}
             color="#a855f7"
           />
         ))}

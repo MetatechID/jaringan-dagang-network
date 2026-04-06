@@ -11,18 +11,30 @@ import { LiveSearchDemo } from "@/components/LiveSearchDemo";
 export default function NetworkDashboard() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      const data = await fetchSubscribers();
-      setSubscribers(data);
-      setLoading(false);
+      try {
+        const data = await fetchSubscribers();
+        setSubscribers(data);
+        setError(null);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to fetch subscribers");
+      } finally {
+        setLoading(false);
+      }
     }
     load();
     // Refresh every 30s
     const interval = setInterval(async () => {
-      const data = await fetchSubscribers();
-      setSubscribers(data);
+      try {
+        const data = await fetchSubscribers();
+        setSubscribers(data);
+        setError(null);
+      } catch {
+        // Keep showing last known data on refresh failure
+      }
     }, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -37,6 +49,32 @@ export default function NetworkDashboard() {
           <p className="text-sm text-slate-500">
             Connecting to network...
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && subscribers.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-12 h-12 rounded-full border-2 border-red-500/30 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-red-400" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="10" cy="10" r="8" />
+              <line x1="10" y1="6" x2="10" y2="11" />
+              <circle cx="10" cy="14" r="0.5" fill="currentColor" />
+            </svg>
+          </div>
+          <p className="text-sm text-red-400 mb-2">
+            Failed to connect to registry
+          </p>
+          <p className="text-xs text-slate-500 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 rounded-lg border border-cyan-900/30 text-sm text-cyan-400 hover:bg-cyan-400/5 transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -69,9 +107,15 @@ export default function NetworkDashboard() {
               <button
                 onClick={async () => {
                   setLoading(true);
-                  const data = await fetchSubscribers();
-                  setSubscribers(data);
-                  setLoading(false);
+                  try {
+                    const data = await fetchSubscribers();
+                    setSubscribers(data);
+                    setError(null);
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : "Failed to fetch");
+                  } finally {
+                    setLoading(false);
+                  }
                 }}
                 className="p-2 rounded-lg border border-cyan-900/30 hover:bg-cyan-400/5 transition-colors"
                 title="Refresh"
