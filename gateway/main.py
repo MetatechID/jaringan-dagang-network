@@ -125,6 +125,14 @@ app.add_middleware(
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _get_http_client() -> httpx.AsyncClient:
+    """Get or create the httpx client (handles serverless cold starts)."""
+    global http_client
+    if http_client is None:
+        http_client = httpx.AsyncClient(timeout=settings.bpp_timeout)
+    return http_client
+
+
 async def _lookup_bpps(domain: str, city: str) -> list[RegistrySubscriber]:
     """Query the registry for BPPs matching domain + city.
 
@@ -146,7 +154,7 @@ async def _lookup_bpps(domain: str, city: str) -> list[RegistrySubscriber]:
     # Query registry
     lookup_body = {"type": "BPP", "domain": domain, "city": city}
     try:
-        resp = await http_client.post(
+        resp = await _get_http_client().post(
             f"{settings.registry_url}/lookup",
             json=lookup_body,
         )
@@ -190,7 +198,7 @@ async def _forward_search(bpp: RegistrySubscriber, payload: dict[str, Any]) -> d
     enriched["context"]["bpp_uri"] = bpp.subscriber_url
 
     try:
-        resp = await http_client.post(url, json=enriched)
+        resp = await _get_http_client().post(url, json=enriched)
         resp.raise_for_status()
         return {
             "bpp_id": bpp.subscriber_id,
@@ -214,17 +222,17 @@ async def _forward_search(bpp: RegistrySubscriber, payload: dict[str, Any]) -> d
 
 @app.post("/search")
 async def search(request: Request):
-    """Receive a Beckn search request and multicast to all matching BPPs.
+    """Receive a Beckn search request and multicast to all matching BPPs."""
+    try:
+        return await _handle_search(request)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Search endpoint error")
+        return {"error": str(exc), "type": type(exc).__name__}
 
-    The gateway:
-    1. Extracts domain and city from the request context.
-    2. Looks up all BPPs for that domain + city via the registry.
-    3. Forwards the search to every matching BPP concurrently.
-    4. Returns an ACK to the calling BAP immediately.
 
-    Each BPP will send its on_search response directly to the BAP
-    via the context.bap_uri.
-    """
+async def _handle_search(request: Request):
     try:
         payload = await request.json()
     except Exception:
