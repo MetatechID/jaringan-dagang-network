@@ -51,13 +51,18 @@ async def lifespan(app: FastAPI):
 
     logger.info("Starting Beckn Registry service")
     logger.info("Initializing database tables")
-    await init_db()
+    try:
+        await init_db()
+    except Exception:
+        logger.warning("Could not connect to database (skipping table creation)", exc_info=True)
 
     logger.info("Connecting to Redis at %s", settings.redis_url)
-    redis_client = aioredis.from_url(
-        settings.redis_url, decode_responses=True,
-    )
     try:
+        redis_client = aioredis.from_url(
+            settings.redis_url, decode_responses=True,
+            socket_connect_timeout=3,
+            socket_timeout=3,
+        )
         await redis_client.ping()
         logger.info("Redis connection established")
     except Exception:
@@ -67,9 +72,12 @@ async def lifespan(app: FastAPI):
     yield
 
     logger.info("Shutting down Beckn Registry service")
-    if redis_client:
-        await redis_client.close()
-    await close_db()
+    try:
+        if redis_client:
+            await redis_client.close()
+        await close_db()
+    except Exception:
+        pass
 
 
 # ---------------------------------------------------------------------------

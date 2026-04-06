@@ -80,10 +80,12 @@ async def lifespan(app: FastAPI):
     http_client = httpx.AsyncClient(timeout=settings.bpp_timeout)
 
     logger.info("Connecting to Redis at %s", settings.redis_url)
-    redis_client = aioredis.from_url(
-        settings.redis_url, decode_responses=True,
-    )
     try:
+        redis_client = aioredis.from_url(
+            settings.redis_url, decode_responses=True,
+            socket_connect_timeout=3,
+            socket_timeout=3,
+        )
         await redis_client.ping()
         logger.info("Redis connection established")
     except Exception:
