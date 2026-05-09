@@ -7,12 +7,17 @@ interface Props {
   subscribers: Subscriber[];
 }
 
-/** Extract a display-friendly name from a subscriber_id like "matchamu.jaringan-dagang.id" */
+/** Extract a display-friendly name from a subscriber_id.
+ *
+ * Two registration conventions are in use:
+ *   - brand-first: "matchamu.jaringan-dagang.id" → "Matchamu"
+ *   - role-first:  "bpp.antarestar.local"        → "Antarestar"
+ */
 function displayName(subscriberId: string): string {
-  // Take the first segment before the first dot
-  const first = subscriberId.split(".")[0];
-  // Convert kebab-case to Title Case
-  return first
+  const segments = subscriberId.split(".");
+  const head = segments[0]?.toLowerCase();
+  const brand = head === "bap" || head === "bpp" ? segments[1] || segments[0] : segments[0];
+  return brand
     .split("-")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");

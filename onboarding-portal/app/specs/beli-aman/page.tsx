@@ -128,7 +128,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Identifiers() {
   const rows: { k: string; v: string }[] = [
-    { k: "subscriber_id", v: "bap.beli-aman.local" },
+    { k: "subscriber_id", v: "beli-aman.jaringan-dagang.id" },
     { k: "subscriber_url", v: "http://localhost:8003/beckn (dev)" },
     { k: "type", v: "BAP" },
     { k: "domain", v: "retail" },

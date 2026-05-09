@@ -1,8 +1,8 @@
 """Register Beli Aman as a BAP on the local Beckn registry.
 
 This is a one-shot seed for local-dev / staging — it makes the registry aware
-of `bap.beli-aman.local` so a future `/lookup` returns it. v1 of Beli Aman
-does NOT actually speak Beckn on the network (the BAP exposes REST only),
+of `beli-aman.jaringan-dagang.id` so a future `/lookup` returns it. v1 of Beli
+Aman does NOT actually speak Beckn on the network (the BAP exposes REST only),
 but registering early keeps the door open for v2 round-trips.
 
 Usage:
@@ -20,7 +20,7 @@ import urllib.error
 import urllib.request
 
 REGISTRY_URL = os.environ.get("REGISTRY_URL", "http://localhost:3030")
-SUBSCRIBER_ID = os.environ.get("BELI_AMAN_SUBSCRIBER_ID", "bap.beli-aman.local")
+SUBSCRIBER_ID = os.environ.get("BELI_AMAN_SUBSCRIBER_ID", "beli-aman.jaringan-dagang.id")
 SUBSCRIBER_URL = os.environ.get("BELI_AMAN_SUBSCRIBER_URL", "http://localhost:8003/beckn")
 DOMAIN = os.environ.get("BELI_AMAN_DOMAIN", "retail")
 CITY = os.environ.get("BELI_AMAN_CITY", "ID:JKT")
