@@ -1,0 +1,41 @@
+# Beckn subscribers seeded into the network registry.
+# Read by scripts/register-subscribers.py
+#
+# public_key_path values are RELATIVE to the network repo root, pointing into
+# sibling repos. Adjust if your checkout layout differs.
+
+subscribers:
+  - subscriber_id: beli-aman.bap.metatech.id
+    type: BAP
+    domain: retail
+    city: ID:JKT
+    subscriber_url: http://localhost:8003/api/v1/beckn
+    public_key_path: ../jaringan-dagang-buyer/dev/keys/beli-aman.public.b64
+
+  - subscriber_id: safiyafood.bpp.metatech.id
+    type: BPP
+    domain: retail
+    city: ID:JKT
+    subscriber_url: http://localhost:8001/beckn
+    public_key_path: ../jaringan-dagang-seller/dev/keys/safiyafood.public.b64
+
+  - subscriber_id: antarestar.bpp.metatech.id
+    type: BPP
+    domain: retail
+    city: ID:JKT
+    subscriber_url: http://localhost:8001/beckn
+    public_key_path: ../jaringan-dagang-seller/dev/keys/antarestar.public.b64
+
+  - subscriber_id: gendes.bpp.metatech.id
+    type: BPP
+    domain: retail
+    city: ID:JKT
+    subscriber_url: http://localhost:8001/beckn
+    public_key_path: ../jaringan-dagang-seller/dev/keys/gendes.public.b64
+
+  - subscriber_id: yourbrand.bpp.metatech.id
+    type: BPP
+    domain: retail
+    city: ID:JKT
+    subscriber_url: http://localhost:8001/beckn
+    public_key_path: ../jaringan-dagang-seller/dev/keys/yourbrand.public.b64
