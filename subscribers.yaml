@@ -39,3 +39,12 @@ subscribers:
     city: ID:JKT
     subscriber_url: http://localhost:8001/beckn
     public_key_path: ../jaringan-dagang-seller/dev/keys/yourbrand.public.b64
+
+  # Single-tenant fallback: the seller process itself acts as one BPP for v1
+  # (per-toko split comes later). All outbound /on_* callbacks signed by this key.
+  - subscriber_id: bpp.jaringan-dagang.local
+    type: BPP
+    domain: retail
+    city: ID:JKT
+    subscriber_url: http://localhost:8001/beckn
+    public_key_path: ../jaringan-dagang-seller/dev/keys/seller.public.b64
