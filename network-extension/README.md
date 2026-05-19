@@ -2,6 +2,46 @@
 
 This directory defines Indonesia-specific standards, taxonomies, and configurations for the Beckn commerce network operating under the **Jaringan Dagang** project.
 
+## Canonical Subscriber ID Scheme (Task A3)
+
+Every network participant identifies itself by a stable Beckn `subscriber_id` that is independent of any DNS host or service deployment. The canonical scheme is:
+
+| Role | Canonical `subscriber_id` |
+|---|---|
+| Buyer-protection BAP (Beli Aman) | `beli-aman.bap.jaringan-dagang.id` |
+| Per-store BPP | `<slug>.jaringan-dagang.id` (e.g. `safiyafood.jaringan-dagang.id`) |
+| Single-tenant fallback BPP | `bpp.jaringan-dagang.id` |
+| Gateway | `gateway.jaringan-dagang.id` |
+| Registry | `registry.jaringan-dagang.id` |
+
+Currently-registered BPPs (see `../subscribers.yaml`):
+
+| `subscriber_id` | Slug | ONDC sub-domain |
+|---|---|---|
+| `safiyafood.jaringan-dagang.id` | `safiyafood` | `ONDC:RET11` Packaged F&B |
+| `matchamu.jaringan-dagang.id` | `matchamu` | `ONDC:RET11` Packaged F&B |
+| `antarestar.jaringan-dagang.id` | `antarestar` | `ONDC:RET12` Fashion |
+| `gendes.jaringan-dagang.id` | `gendes` | `ONDC:RET15` Health & Beauty |
+| `optimumnutrition.jaringan-dagang.id` | `optimumnutrition` | `ONDC:RET15` Health & Beauty |
+| `yourbrand.jaringan-dagang.id` | `yourbrand` | `ONDC:RET` (demo) |
+| `bpp.jaringan-dagang.id` | (fallback) | `ONDC:RET` |
+
+### Migration from legacy identifiers
+
+Pre-A3 the seller DB used `bpp.<slug>.local` for some stores and `*.bpp.metatech.id` was the original network identity. The live `stores` table on the seller (Neon) has three rows still on the legacy form (`antarestar`, `gendes`, `yourbrand`); they are migrated to canonical via an idempotent dry-run-default script:
+
+```bash
+# Print the SQL only (no DB connection):
+cd ~/Code/jaringan-dagang-seller
+python scripts/migrate-subscriber-ids.py
+
+# Apply against the live DB:
+DATABASE_URL=postgresql+asyncpg://... \
+    python scripts/migrate-subscriber-ids.py --apply
+```
+
+After running, every Store row carries its canonical `<slug>.jaringan-dagang.id`. The per-store signing keys (`dev/keys/<slug>.private.b64`) are unchanged — only the subscriber identifier is renamed.
+
 ## Purpose
 
 The Beckn protocol is domain-agnostic and country-agnostic by design. This extension layer localizes the protocol for the Indonesian market by providing:

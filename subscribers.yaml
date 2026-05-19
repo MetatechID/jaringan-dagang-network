@@ -1,50 +1,79 @@
 # Beckn subscribers seeded into the network registry.
 # Read by scripts/register-subscribers.py
 #
+# Canonical subscriber_id scheme (Task A3): ``*.jaringan-dagang.id`` is the
+# network-wide source of truth. DNS hosts (e.g. api.beli-aman.metatech.id,
+# jaringan-dagang-seller-api.metatech.id) are independent of the network
+# identity below.
+#
+# ONDC sub-domain codes from network-extension/domains/retail.yaml:
+#   ONDC:RET11 = F&B (Packaged) — Safiya, Matchamu
+#   ONDC:RET12 = Fashion         — Antarestar
+#   ONDC:RET15 = Health & Beauty — Gendes, Optimum Nutrition
+#   ONDC:RET   = retail default  — single-tenant fallback, YourBrand demo
+#
+# City code from network-extension/cities.yaml: std:021 (Jakarta).
+#
 # public_key_path values are RELATIVE to the network repo root, pointing into
 # sibling repos. Adjust if your checkout layout differs.
 
 subscribers:
-  - subscriber_id: beli-aman.bap.metatech.id
+  - subscriber_id: beli-aman.bap.jaringan-dagang.id
     type: BAP
-    domain: retail
-    city: ID:JKT
+    domain: ONDC:RET
+    city: std:021
     subscriber_url: http://localhost:8003/api/v1/beckn
     public_key_path: ../jaringan-dagang-buyer/dev/keys/beli-aman.public.b64
 
-  - subscriber_id: safiyafood.bpp.metatech.id
+  - subscriber_id: safiyafood.jaringan-dagang.id
     type: BPP
-    domain: retail
-    city: ID:JKT
+    domain: ONDC:RET11
+    city: std:021
     subscriber_url: http://localhost:8001/beckn
     public_key_path: ../jaringan-dagang-seller/dev/keys/safiyafood.public.b64
 
-  - subscriber_id: antarestar.bpp.metatech.id
+  - subscriber_id: antarestar.jaringan-dagang.id
     type: BPP
-    domain: retail
-    city: ID:JKT
+    domain: ONDC:RET12
+    city: std:021
     subscriber_url: http://localhost:8001/beckn
     public_key_path: ../jaringan-dagang-seller/dev/keys/antarestar.public.b64
 
-  - subscriber_id: gendes.bpp.metatech.id
+  - subscriber_id: gendes.jaringan-dagang.id
     type: BPP
-    domain: retail
-    city: ID:JKT
+    domain: ONDC:RET15
+    city: std:021
     subscriber_url: http://localhost:8001/beckn
     public_key_path: ../jaringan-dagang-seller/dev/keys/gendes.public.b64
 
-  - subscriber_id: yourbrand.bpp.metatech.id
+  - subscriber_id: yourbrand.jaringan-dagang.id
     type: BPP
-    domain: retail
-    city: ID:JKT
+    domain: ONDC:RET
+    city: std:021
     subscriber_url: http://localhost:8001/beckn
     public_key_path: ../jaringan-dagang-seller/dev/keys/yourbrand.public.b64
 
-  # Single-tenant fallback: the seller process itself acts as one BPP for v1
-  # (per-toko split comes later). All outbound /on_* callbacks signed by this key.
-  - subscriber_id: bpp.jaringan-dagang.local
+  - subscriber_id: matchamu.jaringan-dagang.id
     type: BPP
-    domain: retail
-    city: ID:JKT
+    domain: ONDC:RET11
+    city: std:021
+    subscriber_url: http://localhost:8001/beckn
+    public_key_path: ../jaringan-dagang-seller/dev/keys/matchamu.public.b64
+
+  - subscriber_id: optimumnutrition.jaringan-dagang.id
+    type: BPP
+    domain: ONDC:RET15
+    city: std:021
+    subscriber_url: http://localhost:8001/beckn
+    public_key_path: ../jaringan-dagang-seller/dev/keys/optimumnutrition.public.b64
+
+  # Single-tenant fallback: the seller process itself acts as one BPP when
+  # no per-store signer is configured. All outbound /on_* callbacks signed
+  # by this key when Store.subscriber_id and the name-based fallback both
+  # fail to resolve.
+  - subscriber_id: bpp.jaringan-dagang.id
+    type: BPP
+    domain: ONDC:RET
+    city: std:021
     subscriber_url: http://localhost:8001/beckn
     public_key_path: ../jaringan-dagang-seller/dev/keys/seller.public.b64
